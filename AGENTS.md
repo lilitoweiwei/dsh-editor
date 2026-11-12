@@ -6,7 +6,7 @@
 
 ## 项目是什么
 
-`@dongasai/dsh-editor` —— DSH 插件，一个包两半：**Host 半边** [index.js](index.js) 注册六条变更
+`@lilitoweiwei/dsh-editor` —— DSH 插件，一个包两半：**Host 半边** [index.js](index.js) 注册六条变更
 路由（`/workspace-editor/` 下的 `write` / `delete` / `mkdir` / `rename` / `copy` / `upload`）；
 **浏览器半边** [client.js](client.js) 在右侧栏注册可编辑的文档渲染器、一个编辑器页签类型、预览
 头部的「✎ 编辑」与「🗑 删除」按钮，以及一个自带文件树、自带剪贴板的工具面板 **「文件编辑」**。
@@ -16,15 +16,43 @@
 是一个**页类型**（`sidebarRightTabs.register`，没有新槽位）；破坏性变更**带版本闸**、覆盖性变更
 **带排他**（目标必须不存在），磁盘中途变过就停下来问人，不静默覆盖、也不静默删除。
 
+## Fork 工作流（本仓库与上游的差异）
+
+- **来源**：`lilitoweiwei/dsh-editor` 是 [`dongasai/dsh_editor`](https://github.com/dongasai/dsh_editor)
+  的 GitHub fork（MIT）。基线 `v1.2.0` / commit `babd882`。`origin` 指向 fork，
+  `upstream` 指向上游，日常改动提交到 `origin/main`。
+- **安装方式（与上游不同，重要）**：不发布 npm、也不在 profile 的
+  `dsh.profile.bundles` 里选这个 bundle。源码放在 `~/.dsh/plugins/dsh-editor`
+  （`~/.dsh` 的 submodule），由 `~/.dsh/profiles/web-plus/cordis.patch.yml` 的一行挂载：
+
+  ```yaml
+  - insert:
+      - id: dsh-editor
+        name: '../../plugins/dsh-editor/index.js'
+  ```
+
+  浏览器半边由宿主 `dsh-client-modules` 从 `package.json` 的 `dsh.client` 发现，**id 取包名**
+  （`@lilitoweiwei/dsh-editor`），所以包名、`src/client.js` 里的 `PACKAGE_NAME` 与各
+  `*_ID` 常量必须始终一致；改名就三处一起改，再 `npm run build`。
+- **改名基线**：包名 `@dongasai/dsh-editor` → `@lilitoweiwei/dsh-editor`（客户端 id、渲染器 id、
+  页签 id 全部派生自它）。
+- **与上游同步**：`git fetch upstream && git merge upstream/main`。冲突集中在 package.json 的
+  `name`/`private`/`repository`、`src/client.js` 的 id 常量与 README 的安装段 —— 保留本 fork 的值。
+- **发版**：不发 npm；`private: true`，`publishConfig` 已删。装了就是这份源码。
+
 ## 命令
 
 | 目的 | 命令 |
 |---|---|
+| 安装 devDependency（只有 esbuild） | `npm install` |
+| 由 `src/client.js` 生成 `client.js` | `npm run build` |
 | Host 半边语法自检 | `node --check index.js` |
 | 浏览器半边语法自检 | `node --check client.js` |
 
-无构建、无 lint、无依赖安装、**没有测试目录**：`package.json` 没有 `dependencies`，`index.js`
-只用 `node:` 内建模块；`client.js` 是手写的浏览器 bundle（由 Host 直接读盘发出，不经打包器）。
+`package.json` 没有 `dependencies`，`index.js` 只用 `node:` 内建模块，可以零依赖直接跑；
+`client.js` 是 esbuild 从 `src/client.js` 打出来的**产物**（单个 IIFE，进仓库），宿主直接读盘
+发出。**改浏览器半边要改 `src/client.js` 再 `npm run build`**，不要手改 `client.js`。没有测试
+目录（取舍见 [IMPLEMENTATION.md](IMPLEMENTATION.md)）。
 
 **没有测试目录是刻意的**（取舍见 [IMPLEMENTATION.md](IMPLEMENTATION.md) 的「为什么没有测试
 目录」）：可测部分几乎全在浏览器侧，没有前端测试环境，为 Host 写「stub 掉 `ctx.fs` 再断言调了

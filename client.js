@@ -2,7 +2,7 @@
 (() => {
   // src/client.js
   (() => {
-    const PACKAGE_NAME = "@dongasai/dsh-editor";
+    const PACKAGE_NAME = "@lilitoweiwei/dsh-editor";
     window.__ModuleLoader__.load({
       id: PACKAGE_NAME,
       factory(require2) {
@@ -130,11 +130,11 @@
           "v"
         ];
         const EDITOR_TAB_PATTERN = "dsh-resource://workspace-editor/**";
-        const DEFAULT_RENDERER_ID = "@dongasai/dsh-editor/text";
-        const OPTIONAL_RENDERER_ID = "@dongasai/dsh-editor/text-option";
-        const EDITOR_TAB_ID = "@dongasai/dsh-editor/tab";
+        const DEFAULT_RENDERER_ID = "@lilitoweiwei/dsh-editor/text";
+        const OPTIONAL_RENDERER_ID = "@lilitoweiwei/dsh-editor/text-option";
+        const EDITOR_TAB_ID = "@lilitoweiwei/dsh-editor/tab";
         const EDITOR_KIND = "workspace-editor";
-        const IMAGE_TAB_ID = "@dongasai/dsh-editor/image";
+        const IMAGE_TAB_ID = "@lilitoweiwei/dsh-editor/image";
         const IMAGE_KIND = "workspace-editor-image";
         const IMAGE_TAB_PATTERN = "dsh-resource://workspace-editor-image/**";
         const drafts = /* @__PURE__ */ new Map();
@@ -2511,7 +2511,7 @@
           }
           return { DocumentBody, PaneBody, EditAction, DeleteAction };
         }
-        const FILES_TAB_ID = "@dongasai/dsh-editor/files";
+        const FILES_TAB_ID = "@lilitoweiwei/dsh-editor/files";
         const FILES_KIND = "workspace-editor-files";
         const WATCH_DEBOUNCE_MS = 120;
         const NOTICE_MS = 6e3;

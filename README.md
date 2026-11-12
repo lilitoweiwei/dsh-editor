@@ -1,4 +1,12 @@
-# @dongasai/dsh-editor
+# @lilitoweiwei/dsh-editor（fork）
+
+> **本仓库是 fork**，上游 [`dongasai/dsh_editor`](https://github.com/dongasai/dsh_editor)（MIT，
+> 基线 `v1.2.0` / commit `babd882`）。改了什么、为什么改、怎么与上游同步，见
+> [AGENTS.md](AGENTS.md) 的「Fork 工作流」一节。
+>
+> **本部署的安装方式不用 npm、也不选 bundle**：源码放在 `~/.dsh/plugins/dsh-editor`，
+> 由 `~/.dsh/profiles/web-plus/cordis.patch.yml` 的一行 `insert` 按相对路径挂载（见下文
+> 「装插件」）。所以包名与客户端 id 都改成了 `@lilitoweiwei/dsh-editor`。
 
 在 DSH Web GUI 的右侧栏里**直接把工作区文件改掉**：官方文档预览注册的 Markdown / 代码 /
 图片 / PDF / Office 渲染器全部只读，读文件的 Remote 命名空间
@@ -16,101 +24,40 @@
 - **为什么这么实现** → [IMPLEMENTATION.md](IMPLEMENTATION.md)（设计决策、两半怎么拼起来、
   四条实现约束的来龙去脉）。
 
-**已发布到 npm**：[`@dongasai/dsh-editor`](https://www.npmjs.com/package/@dongasai/dsh-editor)，
-当前 `1.2.0` —— 与 git tag `v1.2.0` 是同一份内容（tarball shasum 一致）。最省事的装法就一条：
+**本 fork 不发 npm**（`private: true`）。安装由部署侧的 profile patch 完成：
 
-```bash
-dsh plugin --profile web add @dongasai/dsh-editor
+```yaml
+# ~/.dsh/profiles/web-plus/cordis.patch.yml
+- insert:
+    - id: dsh-editor
+      name: '../../plugins/dsh-editor/index.js'
 ```
+
+浏览器半边由宿主的 `dsh-client-modules` 从同一份 `package.json` 的 `dsh.client` 声明发现
+（id 取包名 `@lilitoweiwei/dsh-editor`），不需要额外注册行。
 
 ## 快速开始
 
 两步：装插件 → 在右侧栏打开一个文件。
 
-### 1. 装插件
+### 1. 装插件（本 fork 的方式）
 
-四种装法，按场景选。**都走同一条 pnpm 路径**（`@deepseek-ai/dsh-plugin-manager/operations`，
-共用一把 profile 写锁），装完都会出现在侧栏「插件」页的**已安装**列表里。
+1. 源码在 `~/.dsh/plugins/dsh-editor`（`~/.dsh` 的 git submodule）。
+2. `~/.dsh/profiles/web-plus/cordis.patch.yml` 里挂一行：
 
-**都不需要手写注册行**：本包在 `package.json` 里声明了 `dsh.bundle.patch`，只要这个 bundle
-被选中，生效的那一行就来自本包自带的 [cordis.patch.yml](cordis.patch.yml)。命令行（方式二、
-三、四）安装会顺带把它选进 `dsh.profile.bundles`；Web 上（方式一）是装完点 **立即启用**才选中 ——
-不点就只是「装着但没启用」。
+   ```yaml
+   - insert:
+       - id: dsh-editor
+         name: '../../plugins/dsh-editor/index.js'
+   ```
 
-本包**已发布到 npm**（`@dongasai/dsh-editor`），所以 spec 有三种写法：包名（走 registry，最省事）、
-git 地址、本地路径。包名这条最稳：npm 上的 tarball 就是同名 tag 的内容，版本号与 tag 逐字对应。
+3. **新装 / 摘掉这一行 / 改 `client.js`**：宿主热应用，浏览器**刷新页面**即可
+   （client bundle 每次请求从磁盘现读，按内容 revision 换 URL）。
+4. **改 `index.js`**：需要重启 `dsh-web`（本目录不在 HMR 监视集内，禁用再启用只重挂
+   fiber，不会重新 `import()` 模块）。
 
-#### 方式一：Web 界面（推荐）
-
-DSH Web → 左侧栏**插件** → **添加插件** → 填入本仓库绝对路径 `/data/ai/dsh/dsh_editor`
-（或下面的 git 地址）→ **安装** → 装完点**立即启用**。
-
-- 「添加插件」接受：包名（可带版本）、Git 地址、压缩包、**本地绝对路径**。
-- 装完不点**立即启用**，就只是「装着但没启用」。
-- 侧栏这个「插件」页才能装和开关；**设置 → 内置插件**里的清单是只读的。
-- 填 git 地址时若 GitHub 连不上，界面会提示**无法访问 GitHub** 并给出改用国内镜像的选项
-  （镜像只提供注册表里的包与依赖，不代替 GitHub 仓库下载）。
-
-#### 方式二：命令行 · npm registry（分发，推荐）
-
-```bash
-dsh plugin --profile web add @dongasai/dsh-editor
-# 钉版本
-dsh plugin --profile web add @dongasai/dsh-editor@1.2.0
-```
-
-- 走的是该 profile 里 **pnpm 的 registry 配置**。本机默认的 `registry.npmmirror.com` 是**镜像**，
-  与 npmjs 有同步延迟：刚发的版本可能要先等一会儿才装得到，急用就临时指定
-  `npm_config_registry=https://registry.npmjs.org/ dsh plugin --profile web add @dongasai/dsh-editor`。
-- tarball 里只有运行所需的文件（`index.js` / `client.js` / `cordis.patch.yml` / `locale/*.json` /
-  `icon.svg`，外加 README 与 IMPLEMENTATION.md），**没有任何构建步骤**，装完即用。
-- 钉版本时写的是**包版本**（`@1.2.0`），不是 tag 名；两者逐字对应（`v1.2.0` ↔ `1.2.0`）。
-
-#### 方式三：命令行 · git 源（分发）
-
-```bash
-dsh plugin --profile web add github:dongasai/dsh_editor
-# 或
-dsh plugin --profile web add git+https://github.com/dongasai/dsh_editor.git
-```
-
-`dsh plugin --profile <name> <pnpm args>` 把参数转发给该 profile 目录里的 pnpm。装进来的是
-**副本**：之后改本仓库代码不影响已装的副本（想边改边用就走方式四）。
-
-- `--profile` **必填**（不写直接报 `required option '--profile <name> not specified'`）；
-  `web` 换成你要装进的 profile。
-- **钉版本**：URL 后加 `#`，例如
-  `git+https://github.com/dongasai/dsh_editor.git#v1.2.0`（tag / 分支 / commit 都行）。
-  本仓库当前 tag 是 **`v1.2.0`**，对应 `package.json` 的 `1.2.0` —— 不带 `#` 就跟 `main` 走，
-  每次装到的都可能是新代码（本机开发用方式四的 `link:`，不受影响）。
-- **私有仓库**：`git+ssh://git@github.com/dongasai/dsh_editor.git`（需已配好 SSH key），
-  或先把 HTTPS 凭据配好。
-- **必须带 `git+` 或 `github:` 前缀**。`git@github.com:owner/repo.git` 这种 scp 写法不会被认成
-  git spec，pnpm 会把它当路径，装出一条指向不存在目录的 `link:` 死链（本机 profile 里就留着一条
-  这样的残留：依赖名 `git` → `link:github.com:yangshen830-eng/dsh-editor.git`，`node_modules/git`
-  是断链）。CLI 识别 git spec 的判定也是这个：`/^git\+|^github:|\.git(?:#|$)/`。
-- pnpm 默认会拦 `prepare` 等依赖构建脚本；本包**没有任何构建步骤**（`client.js` 是手写的浏览器
-  bundle，由 Host 直接读盘发出），不会遇到。
-- git / tarball 这类 spec 要先 fetch 才知道 peer 范围，所以 DSH 版本兼容判定发生在**安装之后**；
-  判定不兼容会回滚 `package.json` 与 `pnpm-lock.yaml` 并打印 `allow-version` 命令。本包没有声明
-  任何 DSH peer 依赖，不会触发。
-
-#### 方式四：命令行 · 本地目录（link，开发）
-
-```bash
-dsh plugin --profile web add link:/data/ai/dsh/dsh_editor
-```
-
-装成 `link:` 依赖，代码改动立刻是「已装的那份」—— 适合边改插件边用。
-
-- 改 **Host 半边**（`index.js`）：要重启 Harness 才生效（见「已知边界」）。
-- 改 **浏览器半边**（`client.js`）：刷新页面即可（bundle 每次请求都从磁盘现读，
-  按内容 revision 换 URL），不需要重启。
-
-#### 装完确认
-
-`Config.listConfigs`（`name: "@dongasai/dsh-editor"`）里能看到行、且 `enabled` 为真，即已生效。
-再新开一个会话（或重启 Harness）让插件加载，然后按第 2 步在右侧栏验证。
+装了 web-profile 侧可视化安装、npm/git 源安装、`link:` 开发安装的那几套（上游 README 的
+「方式一～四」）在本部署都不适用：包名已改成 `@lilitoweiwei/dsh-editor` 且不发布。
 
 ### 2. 在右侧栏用起来
 
@@ -179,7 +126,7 @@ dsh plugin --profile web add link:/data/ai/dsh/dsh_editor
 
 面板**最底部固定一行插件信息**（`工作区文件编辑器 · v1.1.0` 这样），鼠标放上去显示插件的介绍；
 标题与版本号是从 Host 的插件清单里**现读**的（按包名认领自己那一行），所以升级插件后这里自己就变，
-不需要谁去改客户端；部署里没有插件管理器（读不到清单）时只显示包名 `@dongasai/dsh-editor`，
+不需要谁去改客户端；部署里没有插件管理器（读不到清单）时只显示包名 `@lilitoweiwei/dsh-editor`，
 关掉面板重开一次会再试一遍。
 「没有工作区根」那种情况下页脚同样在底部。
 
@@ -271,14 +218,14 @@ Host 半边 `inject`：`webServer` / `connection` / `fs` / `sandboxPolicy` / `se
 
 | 扩展点 | 注册物 |
 |---|---|
-| `ctx.documentPreviews.register` | `@dongasai/dsh-editor/text`（`extension` 档，默认视图）、`@dongasai/dsh-editor/text-option`（`builtin` 档，下拉备选） |
+| `ctx.documentPreviews.register` | `@lilitoweiwei/dsh-editor/text`（`extension` 档，默认视图）、`@lilitoweiwei/dsh-editor/text-option`（`builtin` 档，下拉备选） |
 | `sidebar.right.tab.document` | 上面两个 id 的正文 |
-| `ctx.sidebarRightTabs.register` | kind `workspace-editor`，id `@dongasai/dsh-editor/tab`，pattern 命中不了真实地址 |
+| `ctx.sidebarRightTabs.register` | kind `workspace-editor`，id `@lilitoweiwei/dsh-editor/tab`，pattern 命中不了真实地址 |
 | `sidebar.right.pane.tab` | 该 id 的页签正文（编辑器） |
-| `ctx.sidebarRightTabs.register` | kind `workspace-editor-image`，id `@dongasai/dsh-editor/image`，pattern 同样命中不了真实地址（图片的自动打开仍归官方预览） |
+| `ctx.sidebarRightTabs.register` | kind `workspace-editor-image`，id `@lilitoweiwei/dsh-editor/image`，pattern 同样命中不了真实地址（图片的自动打开仍归官方预览） |
 | `sidebar.right.pane.tab` | 该 id 的页签正文（图片预览） |
 | `sidebar.right.tab.document.actions` | id `workspace-editor`、`order: 5` 的「✎ 编辑」按钮；id `workspace-editor-delete`、`order: 6` 的「🗑 删除」按钮 |
-| `ctx.sidebarRightTabs.register` | kind `workspace-editor-files`，id `@dongasai/dsh-editor/files`，guide 卡片「文件编辑」（没有 patterns，只能按 kind 打开） |
+| `ctx.sidebarRightTabs.register` | kind `workspace-editor-files`，id `@lilitoweiwei/dsh-editor/files`，guide 卡片「文件编辑」（没有 patterns，只能按 kind 打开） |
 | `sidebar.right.pane.tab` | 该 id 的文件树面板正文（自带新建 / 改名 / 复制 / 剪切 / 粘贴 / 删除 / 拖拽） |
 | `ctx.shortcuts.register` | 命令 `workspace.editor.files`（默认 `Ctrl/Cmd+Alt+E`），打开「文件编辑」面板 |
 
@@ -472,11 +419,11 @@ Agent 写文件。
 | 检查 | 手段 | 期望 |
 |---|---|---|
 | Loader 行激活 | Host provider `Config`.`listConfigs`，`{ name: "@dongasai/dsh-editor" }`（或按 id `workspace-editor`） | 目录里出现该 entry 且 Config 正常 —— 即 `apply()` 跑完（`cordis.patch.yml` 插的是 `id: workspace-editor` / `name: '@dongasai/dsh-editor'`） |
-| 渲染器注册 + 正文 | Client provider `Slots`.`listSubTree`，`root: sidebar.right.tab.document` | occupants 里出现 `@dongasai/dsh-editor/text` 与 `.../text-option`，`active: true` |
-| 编辑器页签注册 + 正文 | 同上，`root: sidebar.right.pane.tab` | occupants 里出现 `@dongasai/dsh-editor/tab`，`active: true` |
+| 渲染器注册 + 正文 | Client provider `Slots`.`listSubTree`，`root: sidebar.right.tab.document` | occupants 里出现 `@lilitoweiwei/dsh-editor/text` 与 `.../text-option`，`active: true` |
+| 编辑器页签注册 + 正文 | 同上，`root: sidebar.right.pane.tab` | occupants 里出现 `@lilitoweiwei/dsh-editor/tab`，`active: true` |
 | 「编辑」按钮注册 | 同上，`root: sidebar.right.tab.document.actions` | occupants 里出现 `{ id: workspace-editor, order: 5 }`，`active: true` |
 | 「删除」按钮注册 | 同上，`root: sidebar.right.tab.document.actions` | occupants 里出现 `{ id: workspace-editor-delete, order: 6 }`，`active: true`（排在「编辑」后面） |
-| 「文件编辑」正文注册 | `Slots`.`listSubTree`，`root: sidebar.right.pane.tab` | occupants 里出现 `@dongasai/dsh-editor/files`，`active: true` |
+| 「文件编辑」正文注册 | `Slots`.`listSubTree`，`root: sidebar.right.pane.tab` | occupants 里出现 `@lilitoweiwei/dsh-editor/files`，`active: true` |
 | 页签类型注册 | 「编辑」按钮的注册在 `ctx.sidebarRightTabs.register(...)` **之后**执行且成功 | 类型注册没抛错（同一 `apply` 内，上一条通过即蕴含）；`workspace-editor` 与 `workspace-editor-files` 两个 kind 都在 |
 | 快捷键注册 | 命令面板 / 快捷键设置里找 `workspace.editor.files` | 默认绑定是 `Ctrl/Cmd+Alt+E`，没有冲突标记 |
 

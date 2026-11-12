@@ -1,5 +1,5 @@
 /**
- * @module @dongasai/dsh-editor
+ * @module @lilitoweiwei/dsh-editor
  *
  * **工作区文件编辑器 —— Host 半边**：给 Web GUI 提供六条工作区文件变更入口，浏览器那半边
  * （`./client.js`）在右侧栏的文件预览里渲染可编辑、可保存的正文，提供预览头部的「删除」按钮，

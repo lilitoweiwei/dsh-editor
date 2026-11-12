@@ -1,5 +1,5 @@
 /**
- * @module @dongasai/dsh-editor/client
+ * @module @lilitoweiwei/dsh-editor/client
  *
  * **工作区文件编辑器 —— 浏览器半边**。给右侧栏补上「改」的能力，一共三个入口，
  * 共用同一份可编辑正文（`EditorSurface`）：
@@ -117,7 +117,7 @@
  * 插件包名。两个用处：`__ModuleLoader__.load` 的 id，以及「文件编辑」面板页脚的归属信息
  * （页脚要按它去 Host 的插件清单里认领自己的版本号）—— 只此一份字面量。
  */
-const PACKAGE_NAME = '@dongasai/dsh-editor'
+const PACKAGE_NAME = '@lilitoweiwei/dsh-editor'
 
 window.__ModuleLoader__.load({
   id: PACKAGE_NAME,
@@ -183,9 +183,9 @@ window.__ModuleLoader__.load({
     const EDITOR_TAB_PATTERN = 'dsh-resource://workspace-editor/**'
 
     /** 两档渲染器与页签类型的 id（正文组件同一份，注册在各自的槽位里）。 */
-    const DEFAULT_RENDERER_ID = '@dongasai/dsh-editor/text'
-    const OPTIONAL_RENDERER_ID = '@dongasai/dsh-editor/text-option'
-    const EDITOR_TAB_ID = '@dongasai/dsh-editor/tab'
+    const DEFAULT_RENDERER_ID = '@lilitoweiwei/dsh-editor/text'
+    const OPTIONAL_RENDERER_ID = '@lilitoweiwei/dsh-editor/text-option'
+    const EDITOR_TAB_ID = '@lilitoweiwei/dsh-editor/tab'
 
     /** 编辑器页签的 kind（`openResource(address, { kind })` 里用的名字）。 */
     const EDITOR_KIND = 'workspace-editor'
@@ -196,7 +196,7 @@ window.__ModuleLoader__.load({
      * 与编辑器页签同一套做法：pattern 刻意**命中不了任何真实地址**（图片自动打开仍然归官方预览），
      * 只有显式点名 kind 才开 —— 本插件的文件树就是这么开的。
      */
-    const IMAGE_TAB_ID = '@dongasai/dsh-editor/image'
+    const IMAGE_TAB_ID = '@lilitoweiwei/dsh-editor/image'
     const IMAGE_KIND = 'workspace-editor-image'
     const IMAGE_TAB_PATTERN = 'dsh-resource://workspace-editor-image/**'
 
@@ -2726,7 +2726,7 @@ window.__ModuleLoader__.load({
     }
 
     /** 「文件编辑」面板：页签类型 id / kind，以及树上每个目录的观察节流。 */
-    const FILES_TAB_ID = '@dongasai/dsh-editor/files'
+    const FILES_TAB_ID = '@lilitoweiwei/dsh-editor/files'
     const FILES_KIND = 'workspace-editor-files'
 
     /** 变更帧到达后合并成一次重列的等待时间（毫秒）。 */

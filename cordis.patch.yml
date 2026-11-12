@@ -1,4 +1,4 @@
-# 工作区文件编辑器（@dongasai/dsh-editor）
+# 工作区文件编辑器（@lilitoweiwei/dsh-editor）
 #
 # 一个 bundle 两半：
 #   - Host 半边（index.js）按 ENDPOINTS 表注册六条变更路由：POST /workspace-editor/
@@ -10,4 +10,4 @@
 # 不在这里重复注册。
 - insert:
     - id: workspace-editor
-      name: '@dongasai/dsh-editor'
+      name: '@lilitoweiwei/dsh-editor'

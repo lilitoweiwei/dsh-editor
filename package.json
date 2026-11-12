@@ -1,11 +1,12 @@
 {
-  "name": "@dongasai/dsh-editor",
+  "name": "@lilitoweiwei/dsh-editor",
   "version": "1.2.0",
+  "private": true,
   "type": "module",
   "description": "Edit, create, rename, copy, delete and paste workspace files in the DSH web GUI: an editable document renderer, a file-tree sidebar tool with its own clipboard, and six trusted host routes.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dongasai/dsh_editor.git"
+    "url": "git+https://github.com/lilitoweiwei/dsh-editor.git"
   },
   "keywords": [
     "dsh",
@@ -34,10 +35,6 @@
     "icon.svg",
     "IMPLEMENTATION.md"
   ],
-  "publishConfig": {
-    "access": "public",
-    "registry": "https://registry.npmjs.org/"
-  },
   "scripts": {
     "build": "node scripts/build-client.mjs"
   },
