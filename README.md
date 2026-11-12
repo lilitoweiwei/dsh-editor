@@ -7,6 +7,10 @@
 > **本部署的安装方式不用 npm、也不选 bundle**：源码放在 `~/.dsh/plugins/dsh-editor`，
 > 由 `~/.dsh/profiles/web-plus/cordis.patch.yml` 的一行 `insert` 按相对路径挂载（见下文
 > 「装插件」）。所以包名与客户端 id 都改成了 `@lilitoweiwei/dsh-editor`。
+>
+> **与上游的行为差异**：删掉了预览头部的「✎ 编辑」按钮 —— 它会用编辑器页签顶掉预览页签，
+> 而那个页签没有回到预览的入口（只能关掉重开）；官方预览的「打开方式」下拉本来就能在
+> Markdown/代码 与「编辑器」之间来回切，且可逆。所以编辑一律走下拉，按钮不再提供。
 
 在 DSH Web GUI 的右侧栏里**直接把工作区文件改掉**：官方文档预览注册的 Markdown / 代码 /
 图片 / PDF / Office 渲染器全部只读，读文件的 Remote 命名空间
@@ -67,11 +71,10 @@
    —— 官方对这些文件本来也只有只读纯文本 / 代码预览，没有不可替代的能力，所以直接给编辑器
    当默认视图，点开就能改。
 3. **其它文本 / 代码文件**（`.md .ts .py .sh .html .css .sql .csv` …）：默认仍是官方的排版 /
-   高亮预览。要编辑，**点预览工具栏上的「✎ 编辑」按钮** —— 它用编辑器页签**顶掉**这张预览
-   页签（同一个面板、同一个位置）；该文件的编辑器页签已经开着时只聚焦它。也可以走
-   **「打开方式」下拉**选「编辑器」，那是就地换渲染器，选择按标签页记住。
+   高亮预览。要编辑，走预览工具栏上的**「打开方式」下拉**选「编辑器」—— 就地换渲染器，
+   改完再从同一个下拉切回 Markdown / 代码，来回都可逆；这个选择按标签页记住。
 4. 改完点**「保存」**，或按 **Ctrl/Cmd+S**。
-5. **要删掉这个文件**：点预览工具栏上的**「🗑 删除」**（在「✎ 编辑」右边）。第一下只是把它
+5. **要删掉这个文件**：点预览工具栏上的**「🗑 删除」**。第一下只是把它
    变成「确认删除」，第二下才真的删 —— 中间那几秒里如果你不点，它会自己变回「删除」。
    删掉的文件**不进回收站**，页签会随之关掉，文件树里那一行也会消失（树自己盯着变更）。
 6. **把文件与行号发到对话输入框**：在编辑器正文里**右键**，选**「发送到 DSH 输入框」** ——
@@ -148,7 +151,7 @@
 - 后缀认得出、但**浏览器解不开**的格式（`tiff` / `heic` 这类，本插件不内置解码器）：明确说
   「浏览器解不开这个格式」，并给出「重试」与「用编辑器打开」两个出路（后者对 `svg` 看源码很顺手）。
 - 读盘失败（文件被删 / 移走）时同理：显示 Host 的失败码与说明 + 「重试」。
-- 预览工具栏上的「✎ 编辑」**对图片不显示** —— 编辑器对图片给不了任何东西。
+- 图片没有「编辑」这件事（编辑器给不了图片任何东西），「🗑 删除」对图片照常显示。
 
 **官方那个图片渲染器完全不动**：本插件只补自己的入口（「文件编辑」面板的单击）。官方文件树、
 官方的自动打开、官方右上角的「打开方式」下拉都还走官方图片预览；图片也**不进**「哪些文件能进
@@ -182,12 +185,12 @@ diff / patch，以及 C 家族（C/C++/Java/C#/Go/Rust/Kotlin/Swift/PHP 等，�
 纯文本显示。当前状态可以直接在元素上看：`[data-workspace-editor-highlight]` 是
 `on` / `plain` / `over-limit` / `unsupported`。取舍与实测代价见 [IMPLEMENTATION.md](IMPLEMENTATION.md)。
 
-> 「✎ 编辑」按钮换的是**页签**而不是就地切换渲染器：预览用哪个渲染器由文档预览自己的
-> store 决定（`state.rendererId`），外部插件没有公开的写入入口；右侧栏的页签类型是公开的，
-> 所以按钮走 `ctx.sidebarRight.openResource(address, { kind: 'workspace-editor', replaceTab })`。
-> 想回预览：从文件树再点一次该文件（会开新的预览页签）。
-> 编辑器页签类型刻意声明了一个**命中不了任何真实地址**的 pattern，因此它永远不会参与
-> 自动排名 —— 普通打开文件仍旧是官方预览，编辑器只在按钮 / 显式打开时出现。
+> **本 fork 已删掉预览头部的「✎ 编辑」按钮**（上游用 `openResource(..., { kind:
+> 'workspace-editor', replaceTab })` 把预览页签换成编辑器页签，而编辑器页签没有回预览的入口）。
+> 编辑改走官方预览的「打开方式」下拉 —— 预览用哪个渲染器由文档预览自己的 store 决定
+> （`state.rendererId`），外部插件没有公开的写入入口，所以不是我们能在插件里塞一个「编辑视图」，
+> 而是把编辑器注册成渲染器，让下拉来切。编辑器页签类型仍然保留（「文件编辑」面板用它），
+> 它刻意声明了一个**命中不了任何真实地址**的 pattern，因此不会参与自动排名。
 
 ### 数据不会悄悄丢
 
@@ -224,7 +227,7 @@ Host 半边 `inject`：`webServer` / `connection` / `fs` / `sandboxPolicy` / `se
 | `sidebar.right.pane.tab` | 该 id 的页签正文（编辑器） |
 | `ctx.sidebarRightTabs.register` | kind `workspace-editor-image`，id `@lilitoweiwei/dsh-editor/image`，pattern 同样命中不了真实地址（图片的自动打开仍归官方预览） |
 | `sidebar.right.pane.tab` | 该 id 的页签正文（图片预览） |
-| `sidebar.right.tab.document.actions` | id `workspace-editor`、`order: 5` 的「✎ 编辑」按钮；id `workspace-editor-delete`、`order: 6` 的「🗑 删除」按钮 |
+| `sidebar.right.tab.document.actions` | id `workspace-editor-delete`、`order: 6` 的「🗑 删除」按钮（fork 删掉了原来 order 5 的「✎ 编辑」按钮） |
 | `ctx.sidebarRightTabs.register` | kind `workspace-editor-files`，id `@lilitoweiwei/dsh-editor/files`，guide 卡片「文件编辑」（没有 patterns，只能按 kind 打开） |
 | `sidebar.right.pane.tab` | 该 id 的文件树面板正文（自带新建 / 改名 / 复制 / 剪切 / 粘贴 / 删除 / 拖拽） |
 | `ctx.shortcuts.register` | 命令 `workspace.editor.files`（默认 `Ctrl/Cmd+Alt+E`），打开「文件编辑」面板 |
@@ -235,15 +238,14 @@ Host 半边 `inject`：`webServer` / `connection` / `fs` / `sandboxPolicy` / `se
 |---|---|---|---|
 | 默认 | `extension` | `.txt .text .log .json .jsonc .json5 .jsonl .ndjson .yaml .yml .toml .ini .cfg .conf .config .env .properties .lock` | 从文件树点开就是编辑器 |
 | 可选 | `builtin` | 代码 / 文档 / 标记 / 表格类（`.md .ts .py .sh .html .css .sql .csv` 等，见 `client.js` 的 `OPTIONAL_EXTENSIONS`） | 只在「打开方式」下拉里出现，不抢默认 |
-| 兜底 | — | 能在预览里显示出正文与 Host 路径的文本文件（预览的「不支持此文件」分支里没有这个按钮） | 点工具栏上的「✎ 编辑」按钮 |
+| 兜底 | — | 能在预览里显示出正文与 Host 路径的文本文件 | 它不在下拉里 —— 把扩展名补成上面两档之一 |
 
 `priority` 是**档位**而不是排序分值：`extension` 档按扩展名声明就能当默认，`builtin` 档只
 作为显式备选。
 
-**没有扩展名的文件（`Makefile`、`LICENSE`）进不了编辑器**：官方预览匹配不到渲染器时会走它的
-「不支持此文件」分支，那个分支**不渲染 `sidebar.right.tab.document.actions` 槽位**，所以
-「✎ 编辑」按钮根本不出现。想编辑就给文件名加个扩展名，或从「打开方式」下拉里选（前提是它
-至少能匹配到可选档）。
+**没有扩展名的文件（`Makefile`、`LICENSE`）进不了编辑器**：编辑器是按扩展名注册的渲染器，
+匹配不到就不会出现在「打开方式」下拉里。想编辑就给文件名加个扩展名，或在
+`src/client.js` 的 `OPTIONAL_EXTENSIONS` 里补上它的后缀。
 
 ## 线上协议
 
@@ -367,14 +369,14 @@ Agent 写文件。
 | 页面报「Failed to load plugins … loaded without registering `@dongasai/dsh-editor` via `__ModuleLoader__.load`」，插件整个不出来 | **跟别的插件撞了顶层变量名**。宿主把 profile 里所有 client bundle **拼成一个 classic script**（不按包隔离作用域），两个插件各有一个同名顶层 `const` 就会让整条 combo 抛 `SyntaxError`、**一个都不注册** —— 而这条报错**完全不提撞名**（真踩过：与 `@dongasai/dsh-sidebar-terminal` 的顶层 `const PACKAGE_NAME` 相撞）。`node --check` 也查不出来，因为单看每个文件语法都是好的 | 跑 `node reference/probes/combo-scope.mjs`：它按宿主的拼法把 profile 里全部 bundle 拼起来解析，并点名是哪两个包撞名。本插件顶层只允许注释 + 一个 IIFE（见 `AGENTS.md` 约束 25） |
 | `dsh plugin --profile web add @dongasai/dsh-editor` 报 `404` / `ERR_PNPM_FETCH_404` | 该 profile 的 pnpm 走的是**镜像 registry**（`registry.npmmirror.com`），刚发的版本还没同步过来；或包名漏了 scope | `npm view @dongasai/dsh-editor version --registry https://registry.npmjs.org/` 先确认线上有；再用 `npm_config_registry=https://registry.npmjs.org/ dsh plugin --profile web add @dongasai/dsh-editor` 装 |
 | 按包名装到了旧版本（比如 `1.1.0`） | 同上：镜像有同步延迟，`@latest` 可能落后一版 | 显式指定 npmjs registry，或钉版本 `@dongasai/dsh-editor@1.2.0` |
-| 打开文件只有只读预览，没有「✎ 编辑」按钮 | 该文件没匹配到任何渲染器，预览头部的 actions 槽位没挂上（没有扩展名的文件是典型） | 换文件名加扩展名，或从「打开方式」下拉选「编辑器」 |
+| 打开文件只有只读预览，「打开方式」下拉里也没有「编辑器」 | 该文件的扩展名不在两档注册表里（没有扩展名的文件是典型） | 换文件名加扩展名，或在 `src/client.js` 的 `OPTIONAL_EXTENSIONS` 里补上 |
 | 预览工具栏上没有「🗑 删除」按钮 | 同上：这一条也注册在 `sidebar.right.tab.document.actions` 槽位，槽位没挂就没有；编辑器页签里也没有（编辑器不是官方预览） | 回到该文件的预览页签再删，或用终端 / Agent 删 |
 | 删除报「文件已变更，未删除」 | 版本闸生效：从你点「删除」到点「确认删除」之间文件被改过 | 看一眼是不是模型在写；确认要删就再点「仍然删除」 |
 | 删除报 404 `not-found` | 文件已经不在了（模型 / 别的工具刚删掉，或本来就不是文件） | 页签可以直接关掉；刷新文件树 |
 | 删除报 403 `denied` / `outside-workspace` | 会话是 `read-only` 沙箱，或目标不在该会话工作区内 | 换可写会话，或确认文件属于当前工作区 |
 | 删除报「删除请求没有到达 Host」 | 请求根本没到（网络 / 页面 / 反向代理） | 文件没有被删除，重试即可；连着必现就看代理是否拦了 `/workspace-editor/delete` |
 | 删除报「Host 侧还没有这条删除路由」 | 改过 `index.js` 但只刷新了页面：这条路由还没注册，静态 fallback 对 POST 回 405 | **重启 Harness**；文件没有被删除 |
-| 「打开方式」下拉里没有「编辑器」 | 该扩展名不在 `OPTIONAL_EXTENSIONS` 里 | 直接点「✎ 编辑」按钮；要长期支持就在 `client.js` 里加扩展名 |
+| 「打开方式」下拉里没有「编辑器」 | 该扩展名不在 `OPTIONAL_EXTENSIONS` 里 | 要长期支持就在 `src/client.js` 里加扩展名，然后 `npm run build` |
 | 状态条一直是「读取中…」然后转成读取失败 | 该会话 / 路径读不出来（文件被删、权限、不是文本） | 文案里有 Host 的原始说明；不是 UTF-8、含 NUL 或超过 1 MiB 的文件本来就只能只读看 |
 | 保存后横幅说「磁盘上的文件在编辑期间变过」 | 版本闸生效：内容被模型或别的工具改过 | 选「加载磁盘版本」看对方改了什么，或确认要覆盖再点「覆盖保存」 |
 | 保存时提示「文件已存在，没有覆盖」 | 走的是 `create` 模式（新建语义） | 这是刻意的：新建入口不会覆盖同名文件 |
@@ -446,9 +448,8 @@ Agent 写文件。
 
 1. `.json` / `.yaml` / `.txt` 默认就是编辑器：底部状态条显示「已与磁盘同步」，改一个字变
    「未保存的修改」且「保存」变品牌色，点「保存」或 Ctrl/Cmd+S 变「已保存」，磁盘同步变化。
-2. 打开一个 `.md` 或 `.ts`（默认是官方预览），点工具栏上的**「✎ 编辑」** —— 同一张页签
-   应变成标题为「编辑 main.ts」的编辑器页签（位置不变、不新增页签），正文可编辑；
-   该文件的编辑器页签已开着时再点只聚焦，不会开出第二个。
+2. 打开一个 `.md` 或 `.ts`（默认是官方预览），用工具栏的**「打开方式」下拉**选「编辑器」——
+   同一张页签就地换成编辑器正文，正文可编辑；再从同一个下拉切回 Markdown / 代码，应能正常来回。
 3. 编辑器页签里点「换行：开 / 关」应在自动换行与横向滚动间切换。
    - **状态条上的路径**：「已与磁盘同步」右边应跟着这个文件的**相对路径**（工作区内的文件是
      `docs/README.md` 这样，不是绝对路径）；鼠标悬停显示完整绝对路径，
@@ -571,8 +572,9 @@ Agent 写文件。
 - **语法高亮是近似上色、且有体量上限**：按后缀选一套规则表（不是真正的语法解析），
   超过 256 KiB 字符 / 2 万令牌、或浏览器没有 Custom Highlight API 时按纯文本显示。
   认不出的后缀也不上色（比硬套关键字表更不容易误导）。细节见「编辑器长什么样」。
-- **点「✎ 编辑」会把预览页签换成编辑器页签**，不能把预览就地换成编辑器正文 —— 后者的开关在
-  文档预览自己的 store 里，外部插件没有公开入口。想回预览：从文件树再点该文件。
+- **编辑入口只有「打开方式」下拉**（本 fork 删了原来的「✎ 编辑」按钮：它换的是页签，
+  而编辑器页签没有回预览的入口）。改动渲染器选择的开关在文档预览自己的 store 里，
+  外部插件没有公开入口，所以没有"一键切换"的按钮。
 - **官方文件树仍然只读**（不改官方 `ui-sidebar-files`）：改名 / 新建 / 删除要在**本插件的**
   「文件编辑」面板里做，或在预览工具栏上删单个文件（那条只对「预览得出来」的文件生效，
   编辑器页签里没有）。

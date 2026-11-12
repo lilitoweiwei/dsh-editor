@@ -254,7 +254,6 @@
         const zh = {
           "viewer.title": "\u7F16\u8F91\u5668",
           "tab.title": "\u7F16\u8F91 {name}",
-          "action.edit": "\u7F16\u8F91",
           "action.save": "\u4FDD\u5B58",
           "action.saving": "\u4FDD\u5B58\u4E2D\u2026",
           "action.reload": "\u91CD\u65B0\u52A0\u8F7D",
@@ -406,7 +405,6 @@
         const en = {
           "viewer.title": "Editor",
           "tab.title": "Edit {name}",
-          "action.edit": "Edit",
           "action.save": "Save",
           "action.saving": "Saving\u2026",
           "action.reload": "Reload",
@@ -2344,28 +2342,6 @@
               inputActions
             });
           }
-          function EditAction(props) {
-            const { absolutePath, sessionId, t } = props;
-            if (typeof absolutePath !== "string" || absolutePath === "") return null;
-            if (imageMediaTypeOf(absolutePath) !== void 0) return null;
-            const open = (event) => {
-              const target = ctx.sidebarRight.commandTarget(event.currentTarget);
-              const owner = target?.sessionId ?? sessionId;
-              const placement = target?.tabId === void 0 ? target?.paneId === void 0 ? {} : { paneId: target.paneId } : { replaceTab: target.tabId };
-              ctx.sidebarRight.openResource(absoluteFileAddress(absolutePath), {
-                kind: EDITOR_KIND,
-                ...placement,
-                params: { sessionId: owner, path: absolutePath }
-              });
-            };
-            return h("button", {
-              type: "button",
-              className: "dsh-we-open",
-              "data-workspace-editor-open": "",
-              title: t("action.edit"),
-              onClick: open
-            }, "\u270E", h("span", null, t("action.edit")));
-          }
           function DeleteAction(props) {
             const { absolutePath, sessionId, t } = props;
             const [state, setState] = React.useState({ phase: "idle" });
@@ -2509,7 +2485,7 @@
               }, t("action.cancel"))
             );
           }
-          return { DocumentBody, PaneBody, EditAction, DeleteAction };
+          return { DocumentBody, PaneBody, DeleteAction };
         }
         const FILES_TAB_ID = "@lilitoweiwei/dsh-editor/files";
         const FILES_KIND = "workspace-editor-files";
@@ -4827,7 +4803,7 @@ ${d.entries.map((e) => `  ${e}`).join("\n")}`
         }
         function apply(ctx) {
           const t = ctx.locale.bind(NS);
-          const { DocumentBody, PaneBody, EditAction, DeleteAction } = createEditor(ctx);
+          const { DocumentBody, PaneBody, DeleteAction } = createEditor(ctx);
           const batchDialog = createBatchListDialog(ctx);
           const { BatchListDialogContent, openBatchList } = batchDialog;
           const { FilesPanel } = createFilesPanel(ctx, { openBatchList });
@@ -4878,12 +4854,6 @@ ${d.entries.map((e) => `  ${e}`).join("\n")}`
             key: IMAGE_TAB_ID,
             locale: NS
           }, ImageBody)), "workspace-editor: image tab body");
-          ctx.effect(() => ctx.slots.inject("sidebar.right.tab.document.actions", () => ctx.slots.register({
-            name: "sidebar.right.tab.document.actions",
-            id: "workspace-editor",
-            order: 5,
-            locale: NS
-          }, EditAction)), "workspace-editor: preview edit action");
           ctx.effect(() => ctx.slots.inject("sidebar.right.tab.document.actions", () => ctx.slots.register({
             name: "sidebar.right.tab.document.actions",
             id: "workspace-editor-delete",

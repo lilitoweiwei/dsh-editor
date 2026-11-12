@@ -337,7 +337,6 @@ window.__ModuleLoader__.load({
     const zh = {
       'viewer.title': '编辑器',
       'tab.title': '编辑 {name}',
-      'action.edit': '编辑',
       'action.save': '保存',
       'action.saving': '保存中…',
       'action.reload': '重新加载',
@@ -490,7 +489,6 @@ window.__ModuleLoader__.load({
     const en = {
       'viewer.title': 'Editor',
       'tab.title': 'Edit {name}',
-      'action.edit': 'Edit',
       'action.save': 'Save',
       'action.saving': 'Saving…',
       'action.reload': 'Reload',
@@ -2490,40 +2488,6 @@ window.__ModuleLoader__.load({
       }
 
       /**
-       * 预览头部的「编辑」按钮：用编辑器页签**顶掉**这张预览页签（同一个面板、同一个位置），
-       * 该文件的编辑器页签已经开着时就聚焦它。
-       * @param props - `sidebar.right.tab.document.actions` 交来的 props（含 `absolutePath`）。
-       * @returns 按钮，或没有 Host 路径时不渲染。
-       */
-      function EditAction(props) {
-        const { absolutePath, sessionId, t } = props
-        if (typeof absolutePath !== 'string' || absolutePath === '') return null
-        // 图片没有「编辑」这件事：本插件只提供预览（文件树里点图片），编辑器给不了图片任何东西。
-        if (imageMediaTypeOf(absolutePath) !== undefined) return null
-        const open = (event) => {
-          // 用按钮所在的真实 DOM 位置问出面板与页签：只有拿得到当前页签才能「顶掉」它；
-          // 问不到（浮动面板等）就退回「当前活动的停靠面板」，在旁边开一个。
-          const target = ctx.sidebarRight.commandTarget(event.currentTarget)
-          const owner = target?.sessionId ?? sessionId
-          const placement = target?.tabId === undefined
-            ? target?.paneId === undefined ? {} : { paneId: target.paneId }
-            : { replaceTab: target.tabId }
-          ctx.sidebarRight.openResource(absoluteFileAddress(absolutePath), {
-            kind: EDITOR_KIND,
-            ...placement,
-            params: { sessionId: owner, path: absolutePath },
-          })
-        }
-        return h('button', {
-          type: 'button',
-          className: 'dsh-we-open',
-          'data-workspace-editor-open': '',
-          title: t('action.edit'),
-          onClick: open,
-        }, '✎', h('span', null, t('action.edit')))
-      }
-
-      /**
        * 预览头部的「删除」按钮：真删磁盘上的这个文件，不经过编辑器。
        *
        * 三条安全设计（与保存同一套思路）：
@@ -2722,7 +2686,7 @@ window.__ModuleLoader__.load({
           }, t('action.cancel')))
       }
 
-      return { DocumentBody, PaneBody, EditAction, DeleteAction }
+      return { DocumentBody, PaneBody, DeleteAction }
     }
 
     /** 「文件编辑」面板：页签类型 id / kind，以及树上每个目录的观察节流。 */
@@ -5413,7 +5377,7 @@ window.__ModuleLoader__.load({
      */
     function apply(ctx) {
       const t = ctx.locale.bind(NS)
-      const { DocumentBody, PaneBody, EditAction, DeleteAction } = createEditor(ctx)
+      const { DocumentBody, PaneBody, DeleteAction } = createEditor(ctx)
       // 「批量列目录」真正落地的位置：文件树工具条与右键菜单（入口在组件里，实现在
       // `createBatchListDialog` 的 `openBatchList`）。弹窗状态活在那个工厂里，所以要带进面板。
       const batchDialog = createBatchListDialog(ctx)
@@ -5472,14 +5436,15 @@ window.__ModuleLoader__.load({
         locale: NS,
       }, ImageBody)), 'workspace-editor: image tab body')
 
-      ctx.effect(() => ctx.slots.inject('sidebar.right.tab.document.actions', () => ctx.slots.register({
-        name: 'sidebar.right.tab.document.actions',
-        id: 'workspace-editor',
-        order: 5,
-        locale: NS,
-      }, EditAction)), 'workspace-editor: preview edit action')
+      // 预览头部的「✎ 编辑」按钮已在 fork 里删掉（lilitoweiwei，2026-11-12）。
+      //
+      // 它用编辑器页签**顶掉**预览页签，而那个页签没有任何回预览的入口（页签类型换了，
+      // 下拉/工具栏里都没有「回到预览」），只能关页签、回文件树重开。官方预览的
+      // 「打开方式」下拉本来就能在 Markdown/代码 与「编辑器」之间来回切，且是可逆的 ——
+      // 所以删掉按钮、只保留下拉这条路径，编辑模式就永远进得去出得来。面板里那条
+      // `EDITOR_KIND` 路径（文件树行点击）不受影响，仍然存在。
 
-      // 「删除」紧挨「编辑」：同一个槽位，order 大一号排在它后面。
+      // 「删除」在这个槽位（order 6）；「编辑」原为 order 5，已删。
       ctx.effect(() => ctx.slots.inject('sidebar.right.tab.document.actions', () => ctx.slots.register({
         name: 'sidebar.right.tab.document.actions',
         id: 'workspace-editor-delete',

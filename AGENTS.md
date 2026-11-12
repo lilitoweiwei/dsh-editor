@@ -9,7 +9,8 @@
 `@lilitoweiwei/dsh-editor` —— DSH 插件，一个包两半：**Host 半边** [index.js](index.js) 注册六条变更
 路由（`/workspace-editor/` 下的 `write` / `delete` / `mkdir` / `rename` / `copy` / `upload`）；
 **浏览器半边** [client.js](client.js) 在右侧栏注册可编辑的文档渲染器、一个编辑器页签类型、预览
-头部的「✎ 编辑」与「🗑 删除」按钮，以及一个自带文件树、自带剪贴板的工具面板 **「文件编辑」**。
+头部的「🗑 删除」按钮，以及一个自带文件树、自带剪贴板的工具面板 **「文件编辑」**。
+（上游那个「✎ 编辑」按钮已在本 fork 删除 —— 见下面「Fork 工作流」的改动清单。）
 
 三句话概括设计：变更走**自注册的 HTTP 路由**（新增 Remote 命名空间需要构建期生成物，`link:`
 安装走不通）；三档入口（默认渲染器 / 可选渲染器 / 编辑器页签）**共用同一份正文**，「文件编辑」
@@ -36,6 +37,13 @@
   `*_ID` 常量必须始终一致；改名就三处一起改，再 `npm run build`。
 - **改名基线**：包名 `@dongasai/dsh-editor` → `@lilitoweiwei/dsh-editor`（客户端 id、渲染器 id、
   页签 id 全部派生自它）。
+- **行为改动清单**：
+  - 删掉预览头部的「✎ 编辑」按钮（`EditAction` 组件 + 它在 `sidebar.right.tab.document.actions`
+    的注册 + 两条 `action.edit` 文案）。理由：它把预览页签**换成**编辑器页签（`replaceTab`），
+    而编辑器页签**没有回预览的入口**（页签类型换了，工具栏/菜单/`_undo` 都没有退路），只能关页签
+    重开。官方预览的「打开方式」下拉本来就能在 Markdown/代码 与「编辑器」之间**可逆**切换，
+    所以编辑只保留这条路径。编辑器页签类型、`PaneBody`、「文件编辑」面板都还在（面板里点文件
+    仍然开编辑器页签 —— 已知的另一条不可逆路径，用户暂时不需要，先不动）。
 - **与上游同步**：`git fetch upstream && git merge upstream/main`。冲突集中在 package.json 的
   `name`/`private`/`repository`、`src/client.js` 的 id 常量与 README 的安装段 —— 保留本 fork 的值。
 - **发版**：不发 npm；`private: true`，`publishConfig` 已删。装了就是这份源码。
