@@ -4,7 +4,7 @@
 > 基线 `v1.2.0` / commit `babd882`）。改了什么、为什么改、怎么与上游同步，见
 > [AGENTS.md](AGENTS.md) 的「Fork 工作流」一节。
 >
-> **本部署的安装方式：不用 npm，作为 bundle 选中**。源码放在 `~/.dsh/plugins/dsh-editor`
+> **本部署的安装方式：不用 npm，作为 bundle 选中**。源码放在 `$DSH_HOME/plugins/dsh-editor`
 > （git submodule），由 `dsh plugin --profile web-plus add` 记成 `link:` 依赖并加进
 > `dsh.profile.bundles`；本包自带的 `cordis.patch.yml` 插一行（见下文「装插件」）。
 > 包名与客户端 id 都是 `@lilitoweiwei/dsh-editor`。
@@ -32,8 +32,8 @@
 **本 fork 不发 npm**（`private: true`）。本包自己就是一个 bundle，安装由 profile 选中它完成：
 
 ```sh
-cd ~/.dsh
-dsh plugin --profile web-plus add ~/.dsh/plugins/dsh-editor
+cd "$DSH_HOME"
+dsh plugin --profile web-plus add "$DSH_HOME/plugins/dsh-editor"
 ```
 
 它带来的那一行写在 [cordis.patch.yml](cordis.patch.yml) 里（行 id 是 `workspace-editor`，
@@ -54,12 +54,12 @@ dsh plugin --profile web-plus add ~/.dsh/plugins/dsh-editor
 
 ### 1. 装插件（本 fork 的方式）
 
-1. 源码在 `~/.dsh/plugins/dsh-editor`（`~/.dsh` 的 git submodule），`npm install && npm run build`
+1. 源码在 `$DSH_HOME/plugins/dsh-editor`（`$DSH_HOME` 的 git submodule），`npm install && npm run build`
    生成 `client.js`。
 2. 把本包装进 profile 并选中它的 bundle（它会自己带来 `workspace-editor` 那一行）：
 
    ```sh
-   dsh plugin --profile web-plus add ~/.dsh/plugins/dsh-editor
+   dsh plugin --profile web-plus add "$DSH_HOME/plugins/dsh-editor"
    ```
 
 3. **新装 / 在 Plugins 页启停这个 bundle / 改 `client.js`**：宿主热应用，浏览器**刷新页面**即可
