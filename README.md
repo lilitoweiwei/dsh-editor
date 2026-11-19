@@ -4,9 +4,10 @@
 > 基线 `v1.2.0` / commit `babd882`）。改了什么、为什么改、怎么与上游同步，见
 > [AGENTS.md](AGENTS.md) 的「Fork 工作流」一节。
 >
-> **本部署的安装方式不用 npm、也不选 bundle**：源码放在 `~/.dsh/plugins/dsh-editor`，
-> 由 `~/.dsh/profiles/web-plus/cordis.patch.yml` 的一行 `insert` 按相对路径挂载（见下文
-> 「装插件」）。所以包名与客户端 id 都改成了 `@lilitoweiwei/dsh-editor`。
+> **本部署的安装方式：不用 npm，作为 bundle 选中**。源码放在 `~/.dsh/plugins/dsh-editor`
+> （git submodule），由 `dsh plugin --profile web-plus add` 记成 `link:` 依赖并加进
+> `dsh.profile.bundles`；本包自带的 `cordis.patch.yml` 插一行（见下文「装插件」）。
+> 包名与客户端 id 都是 `@lilitoweiwei/dsh-editor`。
 >
 > **与上游的行为差异**：删掉了预览头部的「✎ 编辑」按钮 —— 它会用编辑器页签顶掉预览页签，
 > 而那个页签没有回到预览的入口（只能关掉重开）；官方预览的「打开方式」下拉本来就能在
@@ -28,13 +29,20 @@
 - **为什么这么实现** → [IMPLEMENTATION.md](IMPLEMENTATION.md)（设计决策、两半怎么拼起来、
   四条实现约束的来龙去脉）。
 
-**本 fork 不发 npm**（`private: true`）。安装由部署侧的 profile patch 完成：
+**本 fork 不发 npm**（`private: true`）。本包自己就是一个 bundle，安装由 profile 选中它完成：
+
+```sh
+cd ~/.dsh
+dsh plugin --profile web-plus add ~/.dsh/plugins/dsh-editor
+```
+
+它带来的那一行写在 [cordis.patch.yml](cordis.patch.yml) 里（行 id 是 `workspace-editor`，
+不是包名）：
 
 ```yaml
-# ~/.dsh/profiles/web-plus/cordis.patch.yml
 - insert:
-    - id: dsh-editor
-      name: '../../plugins/dsh-editor/index.js'
+    - id: workspace-editor
+      name: '@lilitoweiwei/dsh-editor'
 ```
 
 浏览器半边由宿主的 `dsh-client-modules` 从同一份 `package.json` 的 `dsh.client` 声明发现
@@ -46,16 +54,15 @@
 
 ### 1. 装插件（本 fork 的方式）
 
-1. 源码在 `~/.dsh/plugins/dsh-editor`（`~/.dsh` 的 git submodule）。
-2. `~/.dsh/profiles/web-plus/cordis.patch.yml` 里挂一行：
+1. 源码在 `~/.dsh/plugins/dsh-editor`（`~/.dsh` 的 git submodule），`npm install && npm run build`
+   生成 `client.js`。
+2. 把本包装进 profile 并选中它的 bundle（它会自己带来 `workspace-editor` 那一行）：
 
-   ```yaml
-   - insert:
-       - id: dsh-editor
-         name: '../../plugins/dsh-editor/index.js'
+   ```sh
+   dsh plugin --profile web-plus add ~/.dsh/plugins/dsh-editor
    ```
 
-3. **新装 / 摘掉这一行 / 改 `client.js`**：宿主热应用，浏览器**刷新页面**即可
+3. **新装 / 在 Plugins 页启停这个 bundle / 改 `client.js`**：宿主热应用，浏览器**刷新页面**即可
    （client bundle 每次请求从磁盘现读，按内容 revision 换 URL）。
 4. **改 `index.js`**：需要重启 `dsh-web`（本目录不在 HMR 监视集内，禁用再启用只重挂
    fiber，不会重新 `import()` 模块）。

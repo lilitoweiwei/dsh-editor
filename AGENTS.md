@@ -22,15 +22,18 @@
 - **来源**：`lilitoweiwei/dsh-editor` 是 [`dongasai/dsh_editor`](https://github.com/dongasai/dsh_editor)
   的 GitHub fork（MIT）。基线 `v1.2.0` / commit `babd882`。`origin` 指向 fork，
   `upstream` 指向上游，日常改动提交到 `origin/main`。
-- **安装方式（与上游不同，重要）**：不发布 npm、也不在 profile 的
-  `dsh.profile.bundles` 里选这个 bundle。源码放在 `~/.dsh/plugins/dsh-editor`
-  （`~/.dsh` 的 submodule），由 `~/.dsh/profiles/web-plus/cordis.patch.yml` 的一行挂载：
+- **安装方式（与上游不同，重要）**：不发布 npm，**作为 bundle 被 profile 选中**。源码放在
+  `~/.dsh/plugins/dsh-editor`（`~/.dsh` 的 submodule），装法是
+  `dsh plugin --profile web-plus add ~/.dsh/plugins/dsh-editor`：它记成 `link:` 依赖并把这个
+  包加进 `dsh.profile.bundles`。本包自带的 `cordis.patch.yml` 负责那一行：
 
   ```yaml
   - insert:
-      - id: dsh-editor
-        name: '../../plugins/dsh-editor/index.js'
+      - id: workspace-editor
+        name: '@lilitoweiwei/dsh-editor'
   ```
+
+  行 id 是 `workspace-editor`（不是包名）；profile patch 里不再有本插件的行。
 
   浏览器半边由宿主 `dsh-client-modules` 从 `package.json` 的 `dsh.client` 发现，**id 取包名**
   （`@lilitoweiwei/dsh-editor`），所以包名、`src/client.js` 里的 `PACKAGE_NAME` 与各
@@ -89,7 +92,7 @@ fiber，不会重新读盘。判据（可直接 curl，无需认证）：`GET /w
 |---|---|
 | [index.js](index.js) | Host 半边全部实现：六条路由共用外壳 + 三道闸 + 版本闸 + `node:fs` 的 errno 映射 + base64 线性校验 |
 | [client.js](client.js) | 浏览器半边全部实现：三档入口 + `EditorSurface` + 语法高亮层与令牌表 + 删除按钮 + 「文件编辑」文件树面板（含剪贴板 / 粘贴）+ 右键菜单动作（复制路径 / 复制相对路径 / 在终端打开，编辑器与文件树共用一份实现）+ 右键「发送到 DSH」 |
-| [cordis.patch.yml](cordis.patch.yml) | 插进 profile 的那一行 |
+| [cordis.patch.yml](cordis.patch.yml) | 本 bundle 的层：插进组合的那一行 |
 | [package.json](package.json) | bundle 清单：`dsh.bundle.patch` + `dsh.client`（`platform` / `immediately` / `inject`） |
 | [locale/zh.json](locale/zh.json) / [locale/en.json](locale/en.json) | 插件列表里的标题与描述 |
 | [icon.svg](icon.svg) | 插件卡片图标 |

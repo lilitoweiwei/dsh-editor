@@ -38,6 +38,9 @@
   "scripts": {
     "build": "node scripts/build-client.mjs"
   },
+  "engines": {
+    "dsh": ">=0.2.0 <0.3.0"
+  },
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
