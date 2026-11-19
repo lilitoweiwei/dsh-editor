@@ -79,9 +79,10 @@
 | `cordis.patch.yml` / `package.json` 的 `dsh.*` | 重启 Harness |
 
 **但「装进 profile / 启停插件行」本身是热应用的**（2026-10-17 实测，宿主全程没重启）：
-`dsh plugin --profile web add <本仓库>` 之后六条路由立刻回 403（未认证被围栏挡 = 已注册），在
-profile 的 `cordis.patch.yml` 里给 `- id: workspace-editor` 加 `disabled: true` 后同一批路由变
-200（SPA 兜底 = 未注册），摘掉这块又回 403。所以：**新装载与启停不用重启**；上面那行「重启
+`dsh plugin --profile web-plus add <本仓库>` 之后六条路由立刻回 403（未认证被围栏挡 = 已注册）；
+把这个 bundle 关掉（Plugins 页的开关写的正是 profile patch 里的 `disabled` 覆盖行，与手工给
+`- id: workspace-editor` 加 `disabled: true` 等价）后同一批路由变 200（SPA 兜底 = 未注册），
+再打开又回 403。所以：**新装载与启停不用重启**；上面那行「重启
 Harness」只针对**改自己 `index.js` 的内容** —— 那个模块已经被 `import()` 过，禁用再启用只会重挂
 fiber，不会重新读盘。判据（可直接 curl，无需认证）：`GET /workspace-editor/write` 回 **403 = Host
 半边在位**，回 **200 = 没加载**；对照 `GET /workspace-editor/随便一个不存在的名字` 恒为 200。
